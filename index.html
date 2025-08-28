@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prompt Generator</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(
+          135deg,
+          #4a148c 0%,
+          #6a1b9a 50%,
+          #8e24aa 100%
+        );
+        min-height: 100vh;
+      }
+
+      header {
+        text-align: center;
+        padding: 2rem 0;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 300;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      h2 {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 400;
+        margin: 2rem 0 1rem 0;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      main {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      #fileInput {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+      }
+
+      #fileInput:hover {
+        border-color: #667eea;
+      }
+
+      #textInput {
+        width: 100%;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        transition: border-color 0.3s ease;
+      }
+
+      #textInput:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      button {
+        display: block;
+        width: 100%;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #00c853 0%, #00a047 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      button::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(
+          45deg,
+          rgba(255, 0, 0, 0.3),
+          rgba(255, 127, 0, 0.3),
+          rgba(255, 255, 0, 0.3),
+          rgba(0, 255, 0, 0.3),
+          rgba(0, 0, 255, 0.3),
+          rgba(75, 0, 130, 0.3),
+          rgba(148, 0, 211, 0.3)
+        );
+        background-size: 400% 400%;
+        border-radius: 10px;
+        z-index: -1;
+        animation: rainbow 6s ease-in-out infinite;
+      }
+
+      @keyframes rainbow {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 200, 83, 0.4);
+        background: linear-gradient(135deg, #00d863 0%, #00b847 100%);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      button:hover::before {
+        background: linear-gradient(
+          45deg,
+          rgba(255, 0, 0, 0.8),
+          rgba(255, 127, 0, 0.8),
+          rgba(255, 255, 0, 0.8),
+          rgba(0, 255, 0, 0.8),
+          rgba(0, 0, 255, 0.8),
+          rgba(75, 0, 130, 0.8),
+          rgba(148, 0, 211, 0.8)
+        );
+        animation: rainbow 3s ease-in-out infinite;
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      pre {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1.5rem;
+        overflow-x: auto;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #495057;
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Prompt Generator</h1>
+    </header>
+    <main>
+      <h2>Upload File</h2>
+      <input type="file" id="fileInput" />
+
+      <h2>Enter Text</h2>
+      <textarea id="textInput" cols="30" rows="10"></textarea>
+
+      <button onclick="sendMessage()">Send</button>
+
+      <h2>Result</h2>
+      <pre><code id="output"></code></pre>
+    </main>
+    <footer>
+      <!-- a short description of this poe embeddable integration -->
+    </footer>
+    <script>
+      window.Poe.registerHandler('resultHandler', result => {
+        console.log({ receivedResult: result })
+      })
+      async function sendMessage() {
+        let result = await window.Poe.sendUserMessage(
+          `@Claude-Sonnet-4 revise the message:
+
+      ${input.value}
+
+      Design a clear prompt.
+      If you need to clarify on any context, ask in advance.
+      `,
+          {
+            openChat: true,
+            handlers: ['resultHandler'],
+          },
+        )
+        console.log({ sendResult: result })
+        output.textContent = JSON.stringify(result, null, 2)
+      }
+    </script>
+  </body>
+</html>
