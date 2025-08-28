@@ -206,6 +206,11 @@
 
       <button onclick="sendMessage()">Send</button>
 
+      <div id="follow_up_questions_container" hidden>
+        <h2>Follow Up Questions</h2>
+        <ol id="follow_up_questions_list"></ol>
+      </div>
+
       <h2>Result</h2>
       <pre><code id="output">Awaiting input...</code></pre>
     </main>
@@ -261,11 +266,41 @@
           } = message
           /* Don't format below code to avoid give extra indentation */
           output.textContent = `
-status: ${status}
-contentType: ${contentType}
-content: ${content}
-attachments: ${JSON.stringify(attachments || [], null, 2)}
-`.trim()
+      status: ${status}
+      contentType: ${contentType}
+      content: ${content}
+      attachments: ${JSON.stringify(attachments || [], null, 2)}
+      `.trim()
+
+          // try to parse the content in json
+          try {
+            let start_index = content.indexOf('{')
+            if (start_index == -1) return
+            let end_index = content.lastIndexOf('}')
+            if (end_index == -1) return
+            let json_text = content.slice(start_index, end_index + 1)
+            let json_object = JSON.parse(json_text)
+            console.log({ json_object })
+            let { prompt, follow_up_questions } = json_object
+
+            // update the prompt
+            textInput.value = prompt
+
+            // display the follow_up_questions in a list
+            follow_up_questions_list.textContent = ''
+            follow_up_questions.forEach((question, index) => {
+              let li = document.createElement('li')
+              li.textContent = `[${index}] ${question}`
+              follow_up_questions_list.appendChild(li)
+            })
+          } catch (error) {
+            // invalid json format when the result is not completed?
+            if (status !== 'incomplete') {
+              // skip
+              return
+            }
+            console.log({ error })
+          }
 
           if (status === 'complete') {
             /* TODO: handle the complete message */
@@ -282,13 +317,21 @@ attachments: ${JSON.stringify(attachments || [], null, 2)}
       })
 
       async function sendMessage() {
-        let message = `@Claude-Sonnet-4 revise the message:
+        /* Don't format below code to avoid give extra indentation */
+        let message = `
+      @Claude-Sonnet-4 revise the message:
 
       ${textInput.value}
 
       Design a clear prompt.
       If you need to clarify on any context, ask in advance.
-      `
+
+      Output in json format with
+      {
+        prompt: string,
+        follow_up_questions: string[]
+      }
+      `.trim()
 
         let files = Array.from(fileInput.files)
         console.log({ message, files })
