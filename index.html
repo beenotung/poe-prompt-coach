@@ -257,6 +257,15 @@
           }
         }
       })
+
+      // Add keyboard event listener for Ctrl+Enter
+      document.addEventListener('keydown', event => {
+        if (event.ctrlKey && event.key === 'Enter') {
+          event.preventDefault()
+          sendMessage()
+        }
+      })
+
       async function sendMessage() {
         let message = `@Claude-Sonnet-4 revise the message:
 
