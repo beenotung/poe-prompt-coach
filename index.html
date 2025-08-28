@@ -204,11 +204,21 @@
       <pre><code id="output"></code></pre>
     </main>
     <footer>
-      <!-- a short description of this poe embeddable integration -->
+      <p>
+        A powerful prompt generator that leverages Claude Sonnet 4 to help you
+        create clear, effective prompts. Simply upload a file or enter text, and
+        our AI assistant will revise and enhance your content into a
+        well-structured prompt.
+      </p>
+      <p>
+        Built with Poe's embeddable integration for seamless AI-powered content
+        generation.
+      </p>
     </footer>
     <script>
       window.Poe.registerHandler('resultHandler', result => {
         console.log({ receivedResult: result })
+        output.textContent = JSON.stringify(result, null, 2)
       })
       async function sendMessage() {
         let result = await window.Poe.sendUserMessage(
