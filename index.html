@@ -192,8 +192,8 @@
       <h1>Prompt Generator</h1>
     </header>
     <main>
-      <h2>Upload File</h2>
-      <input type="file" id="fileInput" />
+      <h2>Upload Files</h2>
+      <input type="file" id="fileInput" multiple />
 
       <h2>Enter Text</h2>
       <textarea id="textInput" cols="30" rows="10"></textarea>
@@ -221,19 +221,22 @@
         output.textContent = JSON.stringify(result, null, 2)
       })
       async function sendMessage() {
-        let result = await window.Poe.sendUserMessage(
-          `@Claude-Sonnet-4 revise the message:
+        let message = `@Claude-Sonnet-4 revise the message:
 
       ${input.value}
 
       Design a clear prompt.
       If you need to clarify on any context, ask in advance.
-      `,
-          {
-            openChat: true,
-            handlers: ['resultHandler'],
-          },
-        )
+      `
+
+        let files = Array.from(fileInput.files)
+        console.log({ message, files })
+        let result = await window.Poe.sendUserMessage(message, {
+          attachments: files,
+          stream: true,
+          openChat: true,
+          handler: 'resultHandler',
+        })
         console.log({ sendResult: result })
         output.textContent = JSON.stringify(result, null, 2)
       }
