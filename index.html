@@ -216,9 +216,46 @@
       </p>
     </footer>
     <script>
-      window.Poe.registerHandler('resultHandler', result => {
-        console.log({ receivedResult: result })
+      window.Poe.registerHandler('resultHandler', (result, context) => {
+        console.log({ receivedResult: result, context })
         output.textContent = JSON.stringify(result, null, 2)
+        /**
+         *
+         * status: 'incomplete' | 'complete' | 'error
+         * responses: Message[]
+         *
+         * // A message from the bot
+         * type Message = {
+         *   messageId: string;
+         *   // The name of the bot that sent the message. e.g. "Assistant"
+         *   senderId: string;
+         *   // The entire content of the message recieved so far
+         *   content: string;
+         *   // Either text/plain or text/markdown
+         *   contentType: string;
+         *   // Each status should be handled to let the user know the current state of the message.
+         *   status: "incomplete" | "complete" | "error";
+         *   // A user friendly message to explain the current status.  Usually only specified for error status.
+         *   statusText?: string;
+         *   attachments?: MessageAttachment[];
+         * };
+         */
+        let { status, responses } = result
+        /* TODO: handle the status */
+        for (let message of responses) {
+          let {
+            messageId,
+            senderId,
+            content,
+            contentType,
+            status,
+            statusText,
+            attachments,
+          } = message
+          if (status === 'complete') {
+            /* TODO: handle the complete message */
+          }
+        }
       })
       async function sendMessage() {
         let message = `@Claude-Sonnet-4 revise the message:
