@@ -177,6 +177,7 @@
         font-size: 0.9rem;
         line-height: 1.5;
         color: #495057;
+        white-space: pre-wrap;
       }
 
       footer {
@@ -196,7 +197,12 @@
       <input type="file" id="fileInput" multiple />
 
       <h2>Enter Text</h2>
-      <textarea id="textInput" cols="30" rows="10"></textarea>
+      <textarea
+        id="textInput"
+        cols="30"
+        rows="10"
+        placeholder="Draft your prompt here, it will be revised interactively."
+      ></textarea>
 
       <button onclick="sendMessage()">Send</button>
 
@@ -242,7 +248,8 @@
          */
         let { status, responses } = result
         /* TODO: handle the status */
-        for (let message of responses) {
+        if (responses.length == 1) {
+          let message = responses[0]
           let {
             messageId,
             senderId,
@@ -252,6 +259,14 @@
             statusText,
             attachments,
           } = message
+          /* Don't format below code to avoid give extra indentation */
+          output.textContent = `
+status: ${status}
+contentType: ${contentType}
+content: ${content}
+attachments: ${JSON.stringify(attachments || [], null, 2)}
+`.trim()
+
           if (status === 'complete') {
             /* TODO: handle the complete message */
           }
@@ -269,7 +284,7 @@
       async function sendMessage() {
         let message = `@Claude-Sonnet-4 revise the message:
 
-      ${input.value}
+      ${textInput.value}
 
       Design a clear prompt.
       If you need to clarify on any context, ask in advance.
