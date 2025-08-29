@@ -567,6 +567,8 @@
           `  prompt: string,`,
           `  follow_up_questions: string[],`,
           `}`,
+          ``,
+          `No need to include any other text in the output, it will be used as input for an interactive chat application.`,
         ].join('\n')
         let files = Array.from(fileInput.files)
         console.log({ message, files })
