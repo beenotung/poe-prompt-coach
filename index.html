@@ -44,7 +44,7 @@
         color: white;
         font-size: 1.5rem;
         font-weight: 400;
-        margin: 2rem 0 1rem 0;
+        margin: 1rem 0 0.5rem 0;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
       }
 
@@ -57,7 +57,6 @@
       #fileInput {
         display: block;
         width: 100%;
-        margin-bottom: 1rem;
         padding: 0.75rem;
         border: 2px dashed #ddd;
         border-radius: 8px;
@@ -72,7 +71,6 @@
 
       #textInput {
         width: 100%;
-        margin-bottom: 1rem;
         padding: 1rem;
         border: 2px solid #e1e5e9;
         border-radius: 8px;
@@ -100,7 +98,6 @@
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
         box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
@@ -137,6 +134,7 @@
 
       #follow_up_questions_container h2 {
         margin: 0;
+        margin-bottom: 0.5rem;
       }
 
       #follow_up_questions_list {
@@ -169,7 +167,7 @@
         color: white;
         font-family: inherit;
         font-size: 1rem;
-        transition: border-color 0.3s ease;
+        transition: border-color 0.1s ease;
       }
 
       .answer-input:focus {
@@ -180,6 +178,38 @@
 
       .answer-input::placeholder {
         color: rgba(255, 255, 255, 0.6);
+      }
+
+      #botSelect {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        transition: border-color 0.3s ease;
+      }
+
+      #botSelect:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      #customBotInput {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        transition: border-color 0.1s ease;
+      }
+
+      #customBotInput:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
       }
 
       @keyframes pulse {
@@ -253,7 +283,49 @@
         placeholder="Draft your prompt here, it will be revised interactively."
       ></textarea>
 
-      <button onclick="sendMessage()">Revise Prompt</button>
+      <h2>Choose AI Bot</h2>
+      <div id="botSelection">
+        <select id="botSelect">
+          <option value="@Assistant">@Assistant</option>
+          <optgroup label="Lightweight Models (Fast & Cheap)">
+            <option value="@GPT-5-nano">@GPT-5-nano</option>
+            <option value="@GPT-4.1-nano">@GPT-4.1-nano</option>
+            <option value="@Grok-3-Mini">@Grok-3-Mini</option>
+            <option value="@DeepSeek-R1-Distill">@DeepSeek-R1-Distill</option>
+          </optgroup>
+          <optgroup label="Standard Models (Good Balance)">
+            <option value="@GPT-5-mini">@GPT-5-mini</option>
+            <option value="@GPT-4o-mini">@GPT-4o-mini</option>
+            <option value="@Gemini-2.5-Flash-Lite">
+              @Gemini-2.5-Flash-Lite
+            </option>
+            <option value="@DeepSeek-V3.1">@DeepSeek-V3.1</option>
+            <option value="@Solar-Pro-2">@Solar-Pro-2</option>
+          </optgroup>
+          <optgroup label="Premium Models (Best Quality)">
+            <option value="@GPT-5-Chat">@GPT-5-Chat</option>
+            <option value="@Claude-Sonnet-4">@Claude-Sonnet-4</option>
+            <option value="@Gemini-2.5-Pro">@Gemini-2.5-Pro</option>
+            <option value="@Grok-4">@Grok-4</option>
+          </optgroup>
+          <optgroup label="Custom">
+            <option value="custom">Custom Bot</option>
+          </optgroup>
+        </select>
+        <input
+          id="customBotInput"
+          type="text"
+          placeholder="Enter custom bot name (e.g., @MyBot)"
+          hidden
+        />
+      </div>
+
+      <button
+        onclick="sendMessage()"
+        style="margin-top: 1rem; margin-bottom: 2rem"
+      >
+        Revise Prompt
+      </button>
 
       <div id="follow_up_questions_container" hidden>
         <h2>Follow-Up Questions</h2>
@@ -261,7 +333,7 @@
         <button
           id="submit_answers_btn"
           onclick="submitAnswers()"
-          style="margin-top: 1rem"
+          style="margin-top: 1rem; margin-bottom: 0"
         >
           Submit Answers & Revise Prompt
         </button>
@@ -402,6 +474,19 @@
         }
       })
 
+      // Handle bot selection
+      function checkBotSelection() {
+        if (botSelect.value === 'custom') {
+          customBotInput.hidden = false
+          customBotInput.focus()
+        } else {
+          customBotInput.hidden = true
+          customBotInput.value = ''
+        }
+      }
+      botSelect.addEventListener('change', checkBotSelection)
+      checkBotSelection()
+
       function submitAnswers() {
         let items = Array.from(
           follow_up_questions_list.querySelectorAll('.question-item'),
@@ -450,9 +535,25 @@
       }
 
       async function sendMessage() {
+        // Get selected bot
+        let botName = botSelect.value
+
+        if (botName === 'custom') {
+          botName = customBotInput.value.trim()
+          if (!botName) {
+            // Shake the custom bot input instead of showing alert
+            customBotInput.style.animation = 'pulse 1s'
+            setTimeout(() => {
+              customBotInput.style.animation = ''
+            }, 1000)
+            customBotInput.focus()
+            return
+          }
+        }
+
         /* Don't format below code to avoid give extra indentation */
         let message = [
-          `@Assistant revise the message:`,
+          `${botName} revise the message:`,
           ``,
           textInput.value,
           ``,
