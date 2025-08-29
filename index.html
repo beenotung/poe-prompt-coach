@@ -145,13 +145,88 @@
         line-height: 1.6;
       }
 
-      #follow_up_questions_list li {
+      .question-item {
         color: white;
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
         background: rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
+        border-radius: 8px;
         border-inline-start: 3px solid #00c853;
+      }
+
+      .question-text {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: white;
+      }
+
+      .answer-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+      }
+
+      .answer-input:focus {
+        outline: none;
+        border-color: #00c853;
+        box-shadow: 0 0 0 3px rgba(0, 200, 83, 0.1);
+      }
+
+      .answer-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1) rotate(0deg);
+          box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+        }
+        10% {
+          transform: scale(1.05) rotate(-3deg);
+          box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.5);
+        }
+        20% {
+          transform: scale(1.05) rotate(3deg);
+          box-shadow: 0 0 0 6px rgba(255, 0, 0, 0.3);
+        }
+        30% {
+          transform: scale(1.05) rotate(-2deg);
+          box-shadow: 0 0 0 5px rgba(255, 0, 0, 0.4);
+        }
+        40% {
+          transform: scale(1.05) rotate(2deg);
+          box-shadow: 0 0 0 6px rgba(255, 0, 0, 0.3);
+        }
+        50% {
+          transform: scale(1.05) rotate(-1deg);
+          box-shadow: 0 0 0 5px rgba(255, 0, 0, 0.4);
+        }
+        60% {
+          transform: scale(1.05) rotate(1deg);
+          box-shadow: 0 0 0 6px rgba(255, 0, 0, 0.3);
+        }
+        70% {
+          transform: scale(1.03) rotate(-0.5deg);
+          box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.4);
+        }
+        80% {
+          transform: scale(1.02) rotate(0.5deg);
+          box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.5);
+        }
+        90% {
+          transform: scale(1.01) rotate(-0.2deg);
+          box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.6);
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+        }
       }
 
       footer {
@@ -178,11 +253,18 @@
         placeholder="Draft your prompt here, it will be revised interactively."
       ></textarea>
 
-      <button onclick="sendMessage()">Send</button>
+      <button onclick="sendMessage()">Revise Prompt</button>
 
       <div id="follow_up_questions_container" hidden>
         <h2>Follow-Up Questions</h2>
-        <ol id="follow_up_questions_list"></ol>
+        <div id="follow_up_questions_list"></div>
+        <button
+          id="submit_answers_btn"
+          onclick="submitAnswers()"
+          style="margin-top: 1rem"
+        >
+          Submit Answers & Revise Prompt
+        </button>
       </div>
 
       <h2>Result</h2>
@@ -201,6 +283,16 @@
       </p>
     </footer>
     <script>
+      if (!window.Poe) {
+        /* stub implementation for testing */
+
+        window.Poe = {
+          sendUserMessage: (message, options) => {},
+          registerHandler: (handlerName, handler) => {},
+          _stub_: true,
+        }
+      }
+
       window.Poe.registerHandler('resultHandler', (result, context) => {
         console.log({ receivedResult: result, context })
         output.textContent = JSON.stringify(result, null, 2)
@@ -239,12 +331,12 @@
             attachments,
           } = message
           /* Don't format below code to avoid give extra indentation */
-          output.textContent = `
-      status: ${status}
-      contentType: ${contentType}
-      content: ${content}
-      attachments: ${JSON.stringify(attachments || [], null, 2)}
-      `.trim()
+          output.textContent = [
+            `status: ${status}`,
+            `contentType: ${contentType}`,
+            `content: ${content}`,
+            `attachments: ${JSON.stringify(attachments || [], null, 2)}`,
+          ].join('\n')
 
           // try to parse the content in json
           try {
@@ -255,22 +347,7 @@
             let json_text = content.slice(start_index, end_index + 1)
             let json_object = JSON.parse(json_text)
             console.log({ json_object })
-            let { prompt, follow_up_questions } = json_object
-
-            // update the prompt
-            textInput.value = prompt
-
-            // display the follow_up_questions in a list
-            follow_up_questions_list.textContent = ''
-            follow_up_questions.forEach((question, index) => {
-              let li = document.createElement('li')
-              li.textContent = `[${index}] ${question}`
-              follow_up_questions_list.appendChild(li)
-            })
-
-            // toggle visibility of follow_up_questions_container
-            follow_up_questions_container.hidden =
-              follow_up_questions.length === 0
+            promptResult(json_object)
           } catch (error) {
             // invalid json format when the result is not completed?
             if (status !== 'incomplete') {
@@ -286,6 +363,37 @@
         }
       })
 
+      function onPromptResult(json_object) {
+        let { prompt, follow_up_questions } = json_object
+
+        // update the prompt
+        textInput.value = prompt
+
+        // display the follow_up_questions with input fields
+        follow_up_questions_list.textContent = ''
+        follow_up_questions.forEach((question, index) => {
+          let questionDiv = document.createElement('div')
+          questionDiv.className = 'question-item'
+
+          let questionText = document.createElement('div')
+          questionText.className = 'question-text'
+          questionText.textContent = `${index + 1}. ${question}`
+
+          let answerInput = document.createElement('input')
+          answerInput.type = 'text'
+          answerInput.className = 'answer-input'
+          answerInput.placeholder = 'Enter your answer here...'
+          answerInput.dataset.questionIndex = index
+
+          questionDiv.appendChild(questionText)
+          questionDiv.appendChild(answerInput)
+          follow_up_questions_list.appendChild(questionDiv)
+        })
+
+        // toggle visibility of follow_up_questions_container
+        follow_up_questions_container.hidden = follow_up_questions.length === 0
+      }
+
       // Add keyboard event listener for Ctrl+Enter
       document.addEventListener('keydown', event => {
         if (event.ctrlKey && event.key === 'Enter') {
@@ -294,23 +402,68 @@
         }
       })
 
+      function submitAnswers() {
+        let items = Array.from(
+          follow_up_questions_list.querySelectorAll('.question-item'),
+          item => {
+            let question = item
+              .querySelector('.question-text')
+              .innerText.replace(/^\d+\.\s/, '')
+            let answer = item.querySelector('.answer-input').value.trim()
+            return {
+              question,
+              answer,
+            }
+          },
+        )
+
+        // Filter out items with empty answer
+        items = items.filter(item => item.answer)
+
+        // If no a single question is answered, remind the user
+        if (items.length == 0 && follow_up_questions_list.children.length > 0) {
+          // apply a pluse effect to the answer boxes
+          let answers =
+            follow_up_questions_list.querySelectorAll('.answer-input')
+          for (let answer of answers) {
+            answer.style.animation = 'pulse 1s'
+            // Remove animation after it completes so it can be triggered again
+            setTimeout(() => {
+              answer.style.animation = ''
+            }, 1000)
+          }
+          return
+        }
+
+        // Append Q&A pairs to the prompt
+        let message = '\n\nContext from follow-up questions:'
+        for (let item of items) {
+          message += `\n\nQ: ${item.question}\nA: ${item.answer}`
+        }
+        textInput.value += message
+
+        // Hide the Q&A section to save space
+        follow_up_questions_container.hidden = true
+
+        // Send the updated message
+        sendMessage()
+      }
+
       async function sendMessage() {
         /* Don't format below code to avoid give extra indentation */
-        let message = `
-      @Claude-Sonnet-4 revise the message:
-
-      ${textInput.value}
-
-      Design a clear prompt.
-      If you need to clarify on any context, ask in advance.
-
-      Output in json format with
-      {
-        prompt: string,
-        follow_up_questions: string[]
-      }
-      `.trim()
-
+        let message = [
+          `revise the message:`,
+          ``,
+          textInput.value,
+          ``,
+          `Design a clear prompt. If you need to clarify on any context, ask in advance.`,
+          ``,
+          `Output in json format with`,
+          `{`,
+          `  prompt: string,`,
+          `  follow_up_questions: string[],`,
+          `}`,
+        ].join('\n')
         let files = Array.from(fileInput.files)
         console.log({ message, files })
         let result = await window.Poe.sendUserMessage(message, {
@@ -321,6 +474,21 @@
         })
         console.log({ sendResult: result })
         output.textContent = JSON.stringify(result, null, 2)
+      }
+
+      if (window.Poe._stub_) {
+        onPromptResult({
+          prompt:
+            "Create a concise introduction to TypeScript for part-time DAE students in Hong Kong that covers its applications across frontend development, backend services, AI model training, and custom model integration. The content should be accessible to students who recently learned HTML, CSS, and JavaScript, focusing on high-level concepts rather than technical details. Structure the introduction to show TypeScript's versatility across the modern development stack, emphasize its value in Hong Kong's tech ecosystem, and conclude with a compelling call-to-action that motivates students to begin their TypeScript learning journey. Keep the tone encouraging and practical for working professionals balancing studies with career demands.",
+          follow_up_questions: [
+            'What format should this introduction take - written article, presentation slides, or video script?',
+            'Should the AI model training section focus on specific frameworks like TensorFlow.js or PyTorch, or remain framework-agnostic?',
+            'What specific call-to-action would be most appropriate - enrolling in a course, starting a project, or exploring documentation?',
+            'Should the introduction mention specific Hong Kong companies or job opportunities that use TypeScript?',
+            'How much emphasis should be placed on each domain (frontend/backend/AI) - equal weight or prioritized based on job market demand?',
+            'Should the content address potential concerns about learning curve or time investment for part-time students?',
+          ],
+        })
       }
     </script>
   </body>
