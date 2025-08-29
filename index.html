@@ -550,6 +550,9 @@
             return
           }
         }
+        if (!botName.startsWith('@')) {
+          botName = `@${botName}`
+        }
 
         /* Don't format below code to avoid give extra indentation */
         let message = [
