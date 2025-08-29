@@ -347,7 +347,7 @@
             let json_text = content.slice(start_index, end_index + 1)
             let json_object = JSON.parse(json_text)
             console.log({ json_object })
-            promptResult(json_object)
+            onPromptResult(json_object)
           } catch (error) {
             // invalid json format when the result is not completed?
             if (status !== 'incomplete') {
