@@ -355,6 +355,20 @@
       </p>
     </footer>
     <script>
+      let sample_prompt_result = {
+        prompt:
+          "Create a concise introduction to TypeScript for part-time DAE students in Hong Kong that covers its applications across frontend development, backend services, AI model training, and custom model integration. The content should be accessible to students who recently learned HTML, CSS, and JavaScript, focusing on high-level concepts rather than technical details. Structure the introduction to show TypeScript's versatility across the modern development stack, emphasize its value in Hong Kong's tech ecosystem, and conclude with a compelling call-to-action that motivates students to begin their TypeScript learning journey. Keep the tone encouraging and practical for working professionals balancing studies with career demands.",
+        follow_up_questions: [
+          'What format should this introduction take - written article, presentation slides, or video script?',
+          'Should the AI model training section focus on specific frameworks like TensorFlow.js or PyTorch, or remain framework-agnostic?',
+          'What specific call-to-action would be most appropriate - enrolling in a course, starting a project, or exploring documentation?',
+          'Should the introduction mention specific Hong Kong companies or job opportunities that use TypeScript?',
+          'How much emphasis should be placed on each domain (frontend/backend/AI) - equal weight or prioritized based on job market demand?',
+          'Should the content address potential concerns about learning curve or time investment for part-time students?',
+        ],
+      }
+      let has_sent_sample_prompt = false
+
       if (!window.Poe) {
         /* stub implementation for testing */
 
@@ -569,7 +583,18 @@
           `}`,
           ``,
           `No need to include any other text in the output, it will be used as input for an interactive chat application.`,
-        ].join('\n')
+        ]
+        if (!has_sent_sample_prompt) {
+          let last_line = message.pop()
+          message.push(
+            `Below is an example of output (for reference only):`,
+            JSON.stringify(sample_prompt_result, null, 2),
+            ``,
+            last_line,
+          )
+          has_sent_sample_prompt = true
+        }
+        message = message.join('\n')
         let files = Array.from(fileInput.files)
         console.log({ message, files })
         let result = await window.Poe.sendUserMessage(message, {
@@ -583,18 +608,7 @@
       }
 
       if (window.Poe._stub_) {
-        onPromptResult({
-          prompt:
-            "Create a concise introduction to TypeScript for part-time DAE students in Hong Kong that covers its applications across frontend development, backend services, AI model training, and custom model integration. The content should be accessible to students who recently learned HTML, CSS, and JavaScript, focusing on high-level concepts rather than technical details. Structure the introduction to show TypeScript's versatility across the modern development stack, emphasize its value in Hong Kong's tech ecosystem, and conclude with a compelling call-to-action that motivates students to begin their TypeScript learning journey. Keep the tone encouraging and practical for working professionals balancing studies with career demands.",
-          follow_up_questions: [
-            'What format should this introduction take - written article, presentation slides, or video script?',
-            'Should the AI model training section focus on specific frameworks like TensorFlow.js or PyTorch, or remain framework-agnostic?',
-            'What specific call-to-action would be most appropriate - enrolling in a course, starting a project, or exploring documentation?',
-            'Should the introduction mention specific Hong Kong companies or job opportunities that use TypeScript?',
-            'How much emphasis should be placed on each domain (frontend/backend/AI) - equal weight or prioritized based on job market demand?',
-            'Should the content address potential concerns about learning curve or time investment for part-time students?',
-          ],
-        })
+        onPromptResult(sample_prompt_result)
       }
     </script>
   </body>
