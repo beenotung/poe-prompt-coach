@@ -1,4 +1,4 @@
-# Prompt Coach
+# Poe Prompt Coach
 
 <div align="center">
 <img src="Prompt Coach App Icon.jpg" alt="Prompt Coach Icon" width="128" height="128">
