@@ -6,11 +6,11 @@
 🚀 <strong><a href="https://poe.com/Prompt-Coach-App" target="_blank">Try it now on Poe</a></strong>
 </div>
 
-An interactive prompt coaching tool that leverages LLM AI to guide you through creating clear, effective prompts. Rather than doing the work for you, the AI coach helps you articulate your expertise by asking the right questions and guiding you to craft better prompts - because you know your domain better than any general AI.
+A collaborative prompt refinement tool that leverages LLM AI to help you build better prompts together. The AI asks targeted questions, you provide your domain expertise as answers, and together you craft clear, effective prompts - because you know your field better than any general AI.
 
 ## Features
 
-- **Interactive Coaching**: Get personalized guidance for improving your prompts
+- **Collaborative Refinement**: AI asks questions, you provide answers, together you build better prompts
 - **Multiple AI Models**: Choose from various AI models including GPT, Claude, Gemini, and more
 - **Document Context**: Provide relevant documents to inform prompt creation
 - **Follow-up Questions**: Answer clarifying questions to refine your prompts
